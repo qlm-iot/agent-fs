@@ -55,14 +55,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	changed := false
 
 	// Send an update whenever the fs changes
 	done := make(chan bool)
 	go func() {
-		var last fsnotify.Event
 
 		then := time.Now()
-		epsilon, _ := time.ParseDuration("5ms")
+		epsilon, _ := time.ParseDuration("10ms")
 
 		for {
 			select {
@@ -70,21 +70,21 @@ func main() {
 				elapsed := time.Since(then)
 				then = time.Now()
 				log.Print(event.Name, " ", event.Op, " ", elapsed)
-				if (event.Name == last.Name && elapsed < epsilon) {
-					// Ignore multiple events from the same operation
-					// Hack needed to get around fsnotify sending 
-					// multiple events for each fs operation
-					// eg. date > file triggers 4 write events
+				if changed {
+					// Ignore multiple events in quick succession
+					// Any change will cause the whole tree to be sent
+					// so we don't even check what has changed
 				} else {
+					changed = true
 					go func() {
 						// wait a moment for the operation to complete
 						time.Sleep(epsilon)
 						qlm, _ = ParseFs(root);
 						bytes, _ := df.Marshal(qlm)
 						conn.Write(bytes)
+						changed = false
 					}()
 				}
-				last = event
 			case err := <-watcher.Errors:
 				log.Fatal(err)
 			}
