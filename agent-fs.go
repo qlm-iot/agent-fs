@@ -5,6 +5,7 @@ import (
 	"github.com/go-fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/qlm-iot/qlm/df"
+	"github.com/qlm-iot/qlm/mi"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +21,7 @@ func wsServerConnector(address string) (chan []byte, chan []byte) {
 			select {
 			case rawMsg := <-send:
 				var h http.Header
-
+				println(string(rawMsg))
 				conn, _, err := websocket.DefaultDialer.Dial(address, h)
 				if err == nil {
 					if err := conn.WriteMessage(websocket.BinaryMessage, rawMsg); err != nil {
@@ -39,6 +40,21 @@ func wsServerConnector(address string) (chan []byte, chan []byte) {
 		}
 	}()
 	return send, receive
+}
+
+func createWriteRequest(qlm  []byte) []byte {
+	ret, _ := mi.Marshal(mi.OmiEnvelope{
+		Version: "1.0",
+		Ttl: -1,
+		Write: &mi.WriteRequest{
+			MsgFormat: "odf",
+			TargetType: "device",
+			Message: &mi.Message{
+				Data: string(qlm),
+			},
+		},
+	})
+	return ret
 }
 
 func main() {
@@ -64,8 +80,8 @@ func main() {
 	qlm, _ := ParseFs(root)
 
 	// Initial message
-	bytes, _ := df.Marshal(qlm)
-	send <- bytes
+	//bytes, _ := df.Marshal(qlm)
+	//send <- bytes
 
 	// Create a new fs watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -76,7 +92,7 @@ func main() {
 
 	// Watch the whole tree
 	err = filepath.Walk(root, func(path string, _ os.FileInfo, _ error) error {
-		log.Print("watching: ", path)
+		//log.Print("watching: ", path)
 		err = watcher.Add(path)
 		if err != nil {
 			return err
@@ -92,15 +108,15 @@ func main() {
 	done := make(chan bool)
 	go func() {
 
-		then := time.Now()
+		//then := time.Now()
 		epsilon, _ := time.ParseDuration("10ms")
 
 		for {
 			select {
-			case event := <-watcher.Events:
-				elapsed := time.Since(then)
-				then = time.Now()
-				log.Print(event.Name, " ", event.Op, " ", elapsed)
+			case <-watcher.Events:
+				//elapsed := time.Since(then)
+				//then = time.Now()
+				//log.Print(event.Name, " ", event.Op, " ", elapsed)
 				if changed {
 					// Ignore multiple events in quick succession
 					// Any change will cause the whole tree to be sent
@@ -111,7 +127,8 @@ func main() {
 						// wait a moment for the operation to complete
 						time.Sleep(epsilon)
 						qlm, _ = ParseFs(root)
-						bytes, _ := df.Marshal(qlm)
+						msg, _ := df.Marshal(qlm)
+						bytes := createWriteRequest(msg)
 						send <- bytes
 						changed = false
 					}()
