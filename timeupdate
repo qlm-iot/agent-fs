@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Updating system time to $1"
+echo "Press ^C to stop"
+
+while :
+do
+	date > $1
+	sleep 0.998
+done
