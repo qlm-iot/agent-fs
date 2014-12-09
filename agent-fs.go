@@ -109,7 +109,7 @@ func main() {
 	go func() {
 
 		//then := time.Now()
-		epsilon, _ := time.ParseDuration("10ms")
+		epsilon, _ := time.ParseDuration("500ms")
 
 		for {
 			select {
