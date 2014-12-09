@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"io/ioutil"
-	"bufio"
-	"strconv"
 	"../qlm/df"
+	"bufio"
+	"io/ioutil"
+	"os"
+	"strconv"
 )
 
 func getline(filename string) string {
@@ -26,8 +26,8 @@ func ParseFs(root string) (df.Objects, error) {
 	}
 
 	for _, entry := range entries {
-		if (entry.IsDir() && entry.Name() == "Objects") {
-			qlmobjects = ParseObjects(root + "/" + entry.Name());
+		if entry.IsDir() && entry.Name() == "Objects" {
+			qlmobjects = ParseObjects(root + "/" + entry.Name())
 		}
 	}
 
@@ -44,15 +44,15 @@ func ParseObjects(path string) df.Objects {
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
 		if entry.IsDir() {
-			if ((len(entry.Name()) > 7) && (entry.Name()[:7] == "Object.")) {
+			if (len(entry.Name()) > 7) && (entry.Name()[:7] == "Object.") {
 				objects = append(objects, ParseObject(fullpath))
 			}
 		} else {
-			if (entry.Name() == "XmlnsXsi") {
+			if entry.Name() == "XmlnsXsi" {
 				qlmobjects.XmlnsXsi = getline(fullpath)
-			} else if (entry.Name() == "NoNamespaceSchemaLocation") {
+			} else if entry.Name() == "NoNamespaceSchemaLocation" {
 				qlmobjects.NoNamespaceSchemaLocation = getline(fullpath)
-			} else if (entry.Name() == "Version") {
+			} else if entry.Name() == "Version" {
 				qlmobjects.Version = getline(fullpath)
 			}
 		}
@@ -74,13 +74,13 @@ func ParseObject(path string) df.Object {
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
 		if entry.IsDir() {
-			if (entry.Name() == "Id") {
+			if entry.Name() == "Id" {
 				qlmobject.Id = ParseQLMID(fullpath)
-			} else if (entry.Name() == "Description") {
+			} else if entry.Name() == "Description" {
 				qlmobject.Description = ParseDescription(fullpath)
-			} else if ((len(entry.Name()) > 7) && (entry.Name()[:7] == "Object.")) {
+			} else if (len(entry.Name()) > 7) && (entry.Name()[:7] == "Object.") {
 				objects = append(objects, ParseObject(fullpath))
-			} else if ((len(entry.Name()) > 9) && (entry.Name()[:9] == "InfoItem.")) {
+			} else if (len(entry.Name()) > 9) && (entry.Name()[:9] == "InfoItem.") {
 				infoitems = append(infoitems, ParseInfoItem(fullpath))
 			}
 		} else {
@@ -106,24 +106,24 @@ func ParseQLMID(path string) *df.QLMID {
 
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
-		if (entry.IsDir() == false) {
-			if (entry.Name() == "IdType") {
+		if entry.IsDir() == false {
+			if entry.Name() == "IdType" {
 				qlmid.IdType = getline(fullpath)
-			} else if (entry.Name() == "TagType") {
+			} else if entry.Name() == "TagType" {
 				qlmid.TagType = getline(fullpath)
-			} else if (entry.Name() == "StartDate") {
+			} else if entry.Name() == "StartDate" {
 				qlmid.StartDate = getline(fullpath)
-			} else if (entry.Name() == "EndDate") {
+			} else if entry.Name() == "EndDate" {
 				qlmid.EndDate = getline(fullpath)
-			} else if (entry.Name() == "Udef") {
+			} else if entry.Name() == "Udef" {
 				qlmid.Udef = getline(fullpath)
-			} else if (entry.Name() == "Text") {
+			} else if entry.Name() == "Text" {
 				qlmid.Text = getline(fullpath)
 			}
 		}
 	}
 
-	return &qlmid;
+	return &qlmid
 }
 
 func ParseDescription(path string) *df.Description {
@@ -134,18 +134,18 @@ func ParseDescription(path string) *df.Description {
 
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
-		if (entry.IsDir() == false) {
-			if (entry.Name() == "Lang") {
+		if entry.IsDir() == false {
+			if entry.Name() == "Lang" {
 				qlmdescription.Lang = getline(fullpath)
-			} else if (entry.Name() == "Udef") {
+			} else if entry.Name() == "Udef" {
 				qlmdescription.Udef = getline(fullpath)
-			} else if (entry.Name() == "Text") {
+			} else if entry.Name() == "Text" {
 				qlmdescription.Text = getline(fullpath)
 			}
 		}
 	}
 
-	return &qlmdescription;
+	return &qlmdescription
 }
 
 func ParseInfoItem(path string) df.InfoItem {
@@ -158,11 +158,11 @@ func ParseInfoItem(path string) df.InfoItem {
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
 		if entry.IsDir() {
-			if (entry.Name() == "Description") {
+			if entry.Name() == "Description" {
 				qlminfoitem.Description = ParseDescription(fullpath)
-			} else if (entry.Name() == "MetaData") {
+			} else if entry.Name() == "MetaData" {
 				qlminfoitem.MetaData = ParseMetaData(fullpath)
-			} else if ((len(entry.Name()) > 6) && (entry.Name()[:6] == "Value.")) {
+			} else if (len(entry.Name()) > 6) && (entry.Name()[:6] == "Value.") {
 				values = append(values, ParseValue(fullpath))
 			}
 		} else {
@@ -191,7 +191,7 @@ func ParseMetaData(path string) *df.MetaData {
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
 		if entry.IsDir() {
-			if ((len(entry.Name()) > 9) && (entry.Name()[:9] == "InfoItem.")) {
+			if (len(entry.Name()) > 9) && (entry.Name()[:9] == "InfoItem.") {
 				infoitems = append(infoitems, ParseInfoItem(fullpath))
 			}
 		}
@@ -210,14 +210,14 @@ func ParseValue(path string) df.Value {
 
 	for _, entry := range entries {
 		fullpath = path + "/" + entry.Name()
-		if (entry.IsDir() == false) {
-			if (entry.Name() == "Text") {
+		if entry.IsDir() == false {
+			if entry.Name() == "Text" {
 				qlmvalue.Text = getline(fullpath)
-			} else if (entry.Name() == "Type") {
+			} else if entry.Name() == "Type" {
 				qlmvalue.Type = getline(fullpath)
-			} else if (entry.Name() == "DateTime") {
+			} else if entry.Name() == "DateTime" {
 				qlmvalue.DateTime = getline(fullpath)
-			} else if (entry.Name() == "UnixTime") {
+			} else if entry.Name() == "UnixTime" {
 				qlmvalue.UnixTime, _ = strconv.ParseInt(getline(fullpath), 10, 64)
 			}
 		}
@@ -234,7 +234,7 @@ func ParseOtherNames(path string) []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		name = scanner.Text()
-		if (len(name) > 0) {
+		if len(name) > 0 {
 			names = append(names, name)
 		}
 	}

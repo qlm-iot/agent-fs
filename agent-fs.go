@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
-	"log"
-	"fmt"
-	"net"
-	"time"
-	"path/filepath"
-	"../qlm/df"
 	"../fsnotify"
+	"../qlm/df"
+	"fmt"
+	"log"
+	"net"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 func main() {
@@ -23,14 +23,14 @@ func main() {
 	port := os.Args[3]
 
 	// Connect to core
-	conn, err := net.Dial("tcp", address + ":" + port)
+	conn, err := net.Dial("tcp", address+":"+port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
 	// Read the fs tree starting at root to a qlm struct
-	qlm, _ := ParseFs(root);
+	qlm, _ := ParseFs(root)
 
 	// Initial message
 	bytes, _ := df.Marshal(qlm)
@@ -79,7 +79,7 @@ func main() {
 					go func() {
 						// wait a moment for the operation to complete
 						time.Sleep(epsilon)
-						qlm, _ = ParseFs(root);
+						qlm, _ = ParseFs(root)
 						bytes, _ := df.Marshal(qlm)
 						conn.Write(bytes)
 						changed = false
