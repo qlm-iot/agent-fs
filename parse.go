@@ -1,8 +1,8 @@
 package main
 
 import (
-	"../qlm/df"
 	"bufio"
+	"github.com/qlm-iot/qlm/df"
 	"io/ioutil"
 	"os"
 	"strconv"

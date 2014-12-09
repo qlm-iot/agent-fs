@@ -1,43 +1,74 @@
 package main
 
 import (
-	"../fsnotify"
-	"../qlm/df"
 	"fmt"
+	"github.com/go-fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
+	"github.com/qlm-iot/qlm/df"
 	"log"
-	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 )
 
+func wsServerConnector(address string) (chan []byte, chan []byte) {
+	send := make(chan []byte)
+	receive := make(chan []byte)
+	go func() {
+		for {
+			select {
+			case rawMsg := <-send:
+				var h http.Header
+
+				conn, _, err := websocket.DefaultDialer.Dial(address, h)
+				if err == nil {
+					if err := conn.WriteMessage(websocket.BinaryMessage, rawMsg); err != nil {
+						receive <- []byte(err.Error())
+					}
+					_, content, err := conn.ReadMessage()
+					if err == nil {
+						receive <- content
+					} else {
+						receive <- []byte(err.Error())
+					}
+				} else {
+					receive <- []byte(err.Error())
+				}
+			}
+		}
+	}()
+	return send, receive
+}
+
 func main() {
 
 	// Command line
-	if len(os.Args) != 4 {
-		fmt.Printf("Usage: sensor-fs <root directory> <core address> <core port>\n")
+	if len(os.Args) != 3 {
+		fmt.Printf("Usage: sensor-fs <root directory> <core address>\n")
 		return
 	}
 	root := os.Args[1]
 	address := os.Args[2]
-	port := os.Args[3]
 
-	// Connect to core
-	conn, err := net.Dial("tcp", address+":"+port)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
+	send, receive := wsServerConnector(address)
+
+	go func(channel chan []byte) {
+		for {
+			msg := <-channel
+			fmt.Printf(string(msg))
+		}
+	}(receive)
 
 	// Read the fs tree starting at root to a qlm struct
 	qlm, _ := ParseFs(root)
 
 	// Initial message
 	bytes, _ := df.Marshal(qlm)
-	conn.Write(bytes)
+	send <- bytes
 
 	// Create a new fs watcher
-	watcher, _ := fsnotify.NewWatcher()
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -81,7 +112,7 @@ func main() {
 						time.Sleep(epsilon)
 						qlm, _ = ParseFs(root)
 						bytes, _ := df.Marshal(qlm)
-						conn.Write(bytes)
+						send <- bytes
 						changed = false
 					}()
 				}
